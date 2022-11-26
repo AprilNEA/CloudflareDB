@@ -1,6 +1,9 @@
 /** @type {any} Your Key to secure POST requests with a token. null if allowed */
 const POSTKEY = null;
 
+/** @type {any} Your Key to secure READ requests with a token. null if allowed */
+const READKEY = null;
+
 /** @type {any} Your Key to secure DELETE requests with a token. null if allowed */
 const DELETEKEY = null;
 
@@ -65,29 +68,36 @@ async function handleRequest(request) {
       }
       case "GET": {
         /**  Handle GET */
-
-        if (path === "/") {
+        if (READKEY && getUrlParam("key") !== READKEY) {
+          /**  Unauthorized */
           return jsonResponse({
-            data: {
-              status: "Running",
-            },
+            data: { status: false, msg: "Invalid key, Unauthorized!" },
+            status: 403,
           });
         } else {
-          /** @type {object} Retrive payload from ID */
-          var getData = await KV_NAMESPACE.get(path.substring(1));
-          if (getData) {
+            if (path === "/") {
             return jsonResponse({
-              data: JSON.parse(getData),
+                data: {
+                status: "Running",
+                },
             });
-          } else {
-            return jsonResponse({
-              data: {
-                status: false,
-                msg: "Not Found",
-              },
-              status: 404,
-            });
-          }
+            } else {
+            /** @type {object} Retrive payload from ID */
+            var getData = await KV_NAMESPACE.get(path.substring(1));
+            if (getData) {
+                return jsonResponse({
+                data: JSON.parse(getData),
+                });
+            } else {
+                return jsonResponse({
+                data: {
+                    status: false,
+                    msg: "Not Found",
+                },
+                status: 404,
+                });
+            }
+            }
         }
       }
       case "DELETE": {
